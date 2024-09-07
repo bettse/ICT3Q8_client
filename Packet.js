@@ -24,7 +24,10 @@ const CommandDescription = {
   0x36: 'Mag-Track READ',
   0x37: 'Mag-Track WRITE',
 
-  0x3a: 'enabled/disable'
+  0x3a: 'enabled/disable',
+  0x40: 'ICContact',
+  0x41: 'revision',
+  0x49: 'ICCardControl',
 }
 
 
