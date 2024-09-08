@@ -7,6 +7,7 @@ const VID = 0x077A;
 
 const init = new Packet(Buffer.from('C000'))
 const statusRequest = new Packet(Buffer.from('C11'));
+const entry = new Packet(Buffer.from('C20'));
 const retrieve = new Packet(Buffer.from('C40'));
 
 const revision = {
@@ -65,9 +66,9 @@ async function main(command) {
         }
         break;
       case statusRequest.command:
-        device.write(enable.serialize())
+        device.write(entry.serialize())
         break;
-      case enable.command:
+      case entry.command:
         device.write(retrieve.serialize())
         break;
       case retrieve.command:
