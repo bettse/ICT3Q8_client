@@ -42,11 +42,18 @@ const SAMControl = {
   status: new Packet(Buffer.from('CIB')),
 }
 
-async function main() {
+async function main(command) {
   var device = await HID.HIDAsync.open(VID, PID);
 
   device.on("data", function(data) {
     const response = Response.deserialize(data);
+
+    // If a command was given, do nothing else
+    if (command.length > 0) {
+      process.exit(0)
+      return
+    }
+
     if (response.command === 'init') {
       device.write(revision.EMV.serialize())
     } else if (response.command === 'revision' && response.pm === revision.EMV.pm) {
@@ -77,8 +84,12 @@ async function main() {
     console.log("error", error);
   });
 
-  device.write(init.serialize())
+  if (command === 'init') {
+    device.write(init.serialize())
+  } else {
+    device.write(init.serialize())
+  }
 
 }
 
-main()
+main(process.argv[1])
