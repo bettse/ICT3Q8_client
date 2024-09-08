@@ -17,7 +17,7 @@ const revision = {
 const withdraw = new Packet(Buffer.from('C90'));
 const intake = new Packet(Buffer.from('C91'));
 
-const enable = new Packet(Buffer.from('C:0'));
+const enable = new Packet(Buffer.from('C:2'));
 const disable = new Packet(Buffer.from('C:1'));
 
 const CardCarry = {
@@ -49,35 +49,49 @@ async function main(command) {
     const response = Response.deserialize(data);
 
     // If a command was given, do nothing else
-    if (command.length > 0) {
+    if (command?.length > 0) {
+      console.log('Stopping after command', command);
       process.exit(0)
       return
     }
 
-    if (response.command === 'init') {
-      device.write(revision.EMV.serialize())
-    } else if (response.command === 'revision' && response.pm === revision.EMV.pm) {
-      device.write(statusRequest.serialize())
-    } else if (response.command === 'status') {
-      device.write(retrieve.serialize())
-    } else if (response.command === 'retrieve') {
-      device.write(ICContact.set.serialize())
-    } else if (response.command === 'ICContact' && response.pm === ICContact.set.pm) {
-      device.write(ICCardControl.activate.serialize())
-    } else if (response.command === 'ICCardControl' && response.pm === ICCardControl.activate.pm) {
-      if (response.positive) {
-        device.write(ICCardControl.status.serialize())
-      } else {
-        device.write(ICContact.release.serialize())
+    switch (response.command) {
+      case init.command:
+        device.write(revision.EMV.serialize())
+        break;
+      case revision.EMV.command:
+        if (response.pm === revision.EMV.pm) {
+          device.write(statusRequest.serialize())
+        }
+        break;
+      case statusRequest.command:
+        device.write(enable.serialize())
+        break;
+      case enable.command:
+        device.write(retrieve.serialize())
+        break;
+      case retrieve.command:
+        device.write(ICContact.set.serialize())
+        break;
+      case ICContact.set.command:
+        if (response.pm === ICContact.set.pm) {
+          device.write(ICCardControl.activate.serialize())
+        }
+        break;
+      case ICCardControl.activate.command:
+        if (response.pm === ICCardControl.activate.pm) {
+          if (response.positive) {
+            device.write(ICCardControl.status.serialize())
+          } else {
+            device.write(ICContact.release.serialize())
+          }
+        } else if (response.pm === ICCardControl.status.pm) {
+          // device.write(ICCardControl.deactivate.serialize())
+        } else if (response.pm === ICCardControl.deactivate.pm) {
+          device.write(ICContact.release.serialize())
+        }
+        break;
       }
-    } else if (response.command === 'ICContact' && response.pm === ICContact.release.pm) { // release
-      device.write(CardCarry.capture.serialize())
-    } else if (response.command === 'ICCardControl' && response.pm === ICCardControl.status.pm) {
-      // device.write(ICCardControl.deactivate.serialize())
-    } else if (response.command === 'ICCardControl' && response.pm === ICCardControl.deactivate.pm) {
-      device.write(ICContact.release.serialize())
-    }
-
 
   });
   device.on("error", function(error) {
@@ -92,4 +106,5 @@ async function main(command) {
 
 }
 
-main(process.argv[1])
+// Assumes [0]'node' [1]'index.js'
+main(process.argv[2])
