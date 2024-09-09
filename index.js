@@ -77,6 +77,8 @@ async function main(command) {
       case ICContact.set.command:
         if (response.pm === ICContact.set.pm) {
           device.write(ICCardControl.activate.serialize())
+        } else if (response.pm === ICContact.release.pm) {
+          device.write(CardCarry.capture.serialize())
         }
         break;
       case ICCardControl.activate.command:
@@ -90,6 +92,11 @@ async function main(command) {
           // device.write(ICCardControl.deactivate.serialize())
         } else if (response.pm === ICCardControl.deactivate.pm) {
           device.write(ICContact.release.serialize())
+        }
+        break;
+      case CardCarry.capture.command:
+        if (response.pm === CardCarry.capture.pm) {
+          device.write(entry.serialize())
         }
         break;
       }
