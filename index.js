@@ -32,15 +32,22 @@ const ICContact = {
 }
 
 const ICCardControl = {
-  activate: new Packet(Buffer.from('CI03')),
+  activate: new Packet(Buffer.from('CI05')), // 0 = active, 3 = +5V in line with ISO/IEC 7816-3
   deactivate: new Packet(Buffer.from('CI1')),
   status: new Packet(Buffer.from('CI2')),
+  t0: new Packet(Buffer.from('CI3')),
 }
 
 const SAMControl = {
   activate: new Packet(Buffer.from('CI@')),
   deactivate: new Packet(Buffer.from('CIA')),
   status: new Packet(Buffer.from('CIB')),
+}
+
+
+const APDU = {
+  // 315041592E5359532E4444463031
+  '1PAY.SYS': Buffer.from('00a404000E315041592e5359532e4444463031', 'hex'),
 }
 
 async function main(command) {
@@ -92,16 +99,27 @@ async function main(command) {
         if (response.pm === ICCardControl.activate.pm) {
           if (response.positive) {
             device.write(ICCardControl.status.serialize())
+            console.log("ATR:", response.data?.toString('hex'))
             console.log('Command executed: ICCardControl.activate -> ICCardControl.status');
           } else {
             device.write(ICContact.release.serialize())
             console.log('Command executed: ICCardControl.activate -> ICContact.release');
           }
         } else if (response.pm === ICCardControl.status.pm) {
+          device.write(ICCardControl.t0.serialize(APDU['1PAY.SYS']))
           // device.write(ICCardControl.deactivate.serialize())
         } else if (response.pm === ICCardControl.deactivate.pm) {
           device.write(ICContact.release.serialize())
           console.log('Command executed: ICCardControl.activate -> ICContact.release');
+        } else if (response.pm === ICCardControl.t0.pm) {
+          if (response.positive) {
+            console.log('APDU Response:', response.data?.toString('hex'))
+            if (response.data?.length > 2) {
+              const SW = response.readUInt16BE(response.data.length - 2)
+              console.log('SW:', SW.toString(16))
+
+            }
+          }
         }
         break;
       case CardCarry.capture.command:

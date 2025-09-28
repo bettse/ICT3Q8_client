@@ -46,11 +46,14 @@ class Packet {
     }
   }
 
-  serialize() {
+  serialize(payload = Buffer.alloc(0)) {
     const buffer = Buffer.alloc(64);// 1 + 2 + this.text.length + 0);
     buffer[0] = START;
-    buffer.writeUInt16BE(this.text.length, 1);
+    buffer.writeUInt16BE(this.text.length + payload.length, 1);
     this.text.copy(buffer, 3);
+    if (payload.length > 0) {
+      payload.copy(buffer, 3 + this.text.length);
+    }
     //const crc = crc16xmodem(buffer.slice(0, buffer.length - 2))
     //buffer.writeUInt16BE(crc, buffer.length - 2)
     debug('serialize', buffer.toString('hex'))
