@@ -59,44 +59,55 @@ async function main(command) {
     switch (response.command) {
       case init.command:
         device.write(revision.EMV.serialize())
+        console.log('Command executed: init -> revision.EMV');
         break;
       case revision.EMV.command:
         if (response.pm === revision.EMV.pm) {
           device.write(statusRequest.serialize())
+          console.log('Command executed: revision.EMV -> statusRequest');
         }
         break;
       case statusRequest.command:
         device.write(entry.serialize())
+        console.log('Command executed: statusRequest -> entry');
         break;
       case entry.command:
         device.write(retrieve.serialize())
+        console.log('Command executed: entry -> retrieve');
         break;
       case retrieve.command:
         device.write(ICContact.set.serialize())
+        console.log('Command executed: retrieve -> ICContact.set');
         break;
       case ICContact.set.command:
         if (response.pm === ICContact.set.pm) {
           device.write(ICCardControl.activate.serialize())
+          console.log('Command executed: ICContact.set -> ICCardControl.activate');
         } else if (response.pm === ICContact.release.pm) {
           device.write(CardCarry.capture.serialize())
+          console.log('Command executed: ICContact.set -> CardCarry.capture');
         }
         break;
       case ICCardControl.activate.command:
         if (response.pm === ICCardControl.activate.pm) {
           if (response.positive) {
             device.write(ICCardControl.status.serialize())
+            console.log('Command executed: ICCardControl.activate -> ICCardControl.status');
           } else {
             device.write(ICContact.release.serialize())
+            console.log('Command executed: ICCardControl.activate -> ICContact.release');
           }
         } else if (response.pm === ICCardControl.status.pm) {
           // device.write(ICCardControl.deactivate.serialize())
         } else if (response.pm === ICCardControl.deactivate.pm) {
           device.write(ICContact.release.serialize())
+          console.log('Command executed: ICCardControl.activate -> ICContact.release');
         }
         break;
       case CardCarry.capture.command:
         if (response.pm === CardCarry.capture.pm) {
           device.write(entry.serialize())
+          console.log('Command executed: CardCarry.capture -> entry');
         }
         break;
       }
@@ -108,9 +119,11 @@ async function main(command) {
 
   if (command === 'init') {
     device.write(init.serialize())
+    console.log('Command executed: init command');
   } else {
     // NOTE: 2025-09-28: I seem to have forgotten to implement a full command parser
     device.write(init.serialize())
+    console.log('Command executed: default init command');
   }
 
 }
