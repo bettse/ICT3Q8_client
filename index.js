@@ -109,6 +109,7 @@ async function main(command) {
   if (command === 'init') {
     device.write(init.serialize())
   } else {
+    // NOTE: 2025-09-28: I seem to have forgotten to implement a full command parser
     device.write(init.serialize())
   }
 
