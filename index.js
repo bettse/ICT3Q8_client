@@ -50,18 +50,9 @@ const APDU = {
   '1PAY.SYS': Buffer.from('00a404000E315041592e5359532e4444463031', 'hex'),
 }
 
-async function main(command) {
-  var device = await HID.HIDAsync.open(VID, PID);
-
-  device.on("data", function(data) {
+function onData(device) {
+  return function(data) {
     const response = Response.deserialize(data);
-
-    // If a command was given, do nothing else
-    if (command?.length > 0) {
-      console.log('Stopping after command', command);
-      process.exit(0)
-      return
-    }
 
     switch (response.command) {
       case init.command:
@@ -128,22 +119,19 @@ async function main(command) {
           console.log('Command executed: CardCarry.capture -> entry');
         }
         break;
-      }
+    }
+  }
+}
 
-  });
+async function main() {
+  var device = await HID.HIDAsync.open(VID, PID);
+
+  device.on("data", onData(device));
   device.on("error", function(error) {
     console.log("error", error);
   });
 
-  if (command === 'init') {
-    device.write(init.serialize())
-    console.log('Command executed: init command');
-  } else {
-    // NOTE: 2025-09-28: I seem to have forgotten to implement a full command parser
-    device.write(init.serialize())
-    console.log('Command executed: default init command');
-  }
-
+  device.write(init.serialize())
 }
 
 // Assumes [0]'node' [1]'index.js'
